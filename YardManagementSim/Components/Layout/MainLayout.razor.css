@@ -1,0 +1,27 @@
+.yard-layout {
+ 
+}
+
+.yard-layout > div {
+       border: 1px solid #333;
+       box-sizing: border-box;
+ }
+
+.top-banner {
+    height: 100px;
+    background-color: green;
+    position: sticky;
+}
+
+.top-banner-header {
+    display: grid;
+    height: 100px;
+    grid-template-columns: 180px 1fr 180px 180px 180px;
+    grid-row: 1;
+    position:sticky;
+}
+
+.top-banner-header > div {
+    border: 1px solid #000000;
+    box-sizing: border-box;
+}
