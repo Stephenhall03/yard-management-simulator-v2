@@ -51,5 +51,23 @@
 .main-div > div {
     border: 1px solid #000000;
     box-sizing: border-box;
-    background-color: blue;
+    background-color: red;
  }
+
+.main {
+    height: 100px;
+    overflow-y: auto;
+}
+
+.Slip {
+    display: grid;
+    grid-template-columns: 180px 1fr 180px 180px 180px;
+    height: 100%;
+    align-items: stretch;
+}
+
+.Slip > div {
+    border: 1px solid #000000;
+    box-sizing: border-box;
+
+}
