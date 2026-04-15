@@ -55,19 +55,26 @@
  }
 
 .main {
-    height: 100px;
+    max-height : 575px;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
-.Slip {
+.slip {
     display: grid;
     grid-template-columns: 180px 1fr 180px 180px 180px;
-    height: 100%;
-    align-items: stretch;
+    height: 100px;
+    width: 100%;
 }
 
-.Slip > div {
+.slip > div {
     border: 1px solid #000000;
     box-sizing: border-box;
+    padding: 8px;
 
+}
+
+.main::-webkit-scrollbar {
+    display: none;
 }
