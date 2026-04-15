@@ -13,6 +13,20 @@
     position: sticky;
 }
 
+.top-banner-div {
+    display: grid;
+    height: 25px;
+    grid-template-columns: 180px 1fr 180px 180px 180px;
+    grid-row: 1;
+    position: sticky;
+}
+
+.top-banner-div > div {
+    border: 1px solid #000000;
+    box-sizing: border-box;
+    background-color: blue;
+}
+
 .top-banner-header {
     display: grid;
     height: 100px;
