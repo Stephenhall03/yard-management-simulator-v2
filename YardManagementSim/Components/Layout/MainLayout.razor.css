@@ -1,85 +1,76 @@
-.yard-layout {
- 
+.yard-header {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    border-bottom: 2px solid black;
+    background-color: #d1d5db;
 }
 
-.yard-layout > div {
-       border: 1px solid #333;
-       box-sizing: border-box;
- }
+    .yard-header input,
+    .yard-header select,
+    .yard-header button {
+        padding: 6px;
+    }
 
-.top-banner {
-    height: 100px;
-    background-color: green;
-    position: sticky;
+.top-banner-div,
+.top-banner-header,
+.main-div,
+.slip {
+    display: grid;
+    grid-template-columns: 180px 1fr 180px 180px 180px;
+    width: 100%;
 }
 
 .top-banner-div {
-    display: grid;
     height: 25px;
-    grid-template-columns: 180px 1fr 180px 180px 180px;
-    grid-row: 1;
-    position: sticky;
 }
 
-.top-banner-div > div {
-    border: 1px solid #000000;
-    box-sizing: border-box;
-    background-color: blue;
-}
+    .top-banner-div > div {
+        background-color: blue;
+        border: 1px solid black;
+    }
 
 .top-banner-header {
-    display: grid;
     height: 100px;
-    grid-template-columns: 180px 1fr 180px 180px 180px;
-    grid-row: 1;
-    position:sticky;
 }
 
-.top-banner-header > div {
-    border: 1px solid #000000;
-    box-sizing: border-box;
-}
+    .top-banner-header > div {
+        border: 1px solid black;
+    }
 
 .main-div {
-    display: grid;
     height: 25px;
-    grid-template-columns: 180px 1fr 180px 180px 180px;
-    grid-row: 1;
-    position: sticky;
 }
 
-.main-div > div {
-    border: 1px solid #000000;
-    box-sizing: border-box;
-    background-color: red;
- }
+    .main-div > div {
+        background-color: red;
+        border: 1px solid black;
+    }
 
 .main {
-    max-height : 525px;
+    max-height: 525px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
 }
 
 .slip {
-    display: grid;
-    grid-template-columns: 180px 1fr 180px 180px 180px;
-    height: 200px;
-    width: 100%;
+    height: 100px;
+    cursor: pointer;
 }
 
-.slip > div {
-    border: 1px solid #000000;
-    box-sizing: border-box;
-    padding: 24px;
+    .slip:hover {
+        background-color: #e5e7eb;
+    }
 
-}
+    .slip.selected {
+        background-color: #c7d2fe;
+    }
 
-.actions button {
-    width: 100%;
-    padding: 8px;
-}
-
-.main::-webkit-scrollbar {
-    display: none;
-}
+    .slip > div {
+        border: 1px solid black;
+        box-sizing: border-box;
+        padding: 24px;
+        display: flex;
+        align-items: center;
+    }

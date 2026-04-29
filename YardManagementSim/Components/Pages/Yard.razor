@@ -1,40 +1,66 @@
-﻿@page "/yard"
+﻿@page "/"
+@page "/yard"
+
 @using Microsoft.EntityFrameworkCore
 @using YardManagementSim.Data
 @using YardManagementSim.Models
+
 @inject YardDbContext Db
+
+<div class="yard-header">
+    <select @bind="SelectedSlotId">
+        <option value="">Select empty slip</option>
+        @foreach (var slot in EmptySlots)
+        {
+            <option value="@slot.Id">@slot.Code</option>
+        }
+    </select>
+
+    <input placeholder="Trailer Number" @bind="CheckInTrailerNumber" />
+    <input placeholder="Load ID" @bind="CheckInLoadId" />
+    <input placeholder="Seal" @bind="CheckInSeal" />
+    <input placeholder="Notes" @bind="CheckInNotes" />
+
+    <button @onclick="CheckInTrailer">Check In</button>
+    <button @onclick="CheckOutTrailer" disabled="@(SelectedGridSlot == null)">Check Out</button>
+</div>
+
+<div class="main-div">
+    <div>Slip</div>
+    <div>Trailer</div>
+    <div>Load ID</div>
+    <div>Seal</div>
+    <div>Notes</div>
+</div>
 
 <div class="main">
     @foreach (var slot in YardSlots)
     {
-        <div class="slip">
+        <div class="slip @(SelectedGridSlot?.Id == slot.Id ? "selected" : "")"
+             @onclick="() => SelectGridSlot(slot)">
+
             <div class="slot-code">@slot.Code</div>
-
-            <div class="trailer">
-                <input @bind="slot.Trailer" />
-            </div>
-
-            <div class="loadid">
-                <input @bind="slot.LoadId" />
-            </div>
-
-            <div class="Seal">
-                <input @bind="slot.Seal" />
-            </div>
-
-            <div class="notes">
-                <input @bind="slot.Notes" />
-            </div>
-
-            <div class="actions">
-                <button @onclick="() => SaveSlot(slot)">Save</button>
-            </div>
+            <div class="trailer">@slot.Trailer</div>
+            <div class="loadid">@slot.LoadId</div>
+            <div class="seal">@slot.Seal</div>
+            <div class="notes">@slot.Notes</div>
         </div>
     }
 </div>
 
 @code {
     private List<YardSlot> YardSlots = new();
+    private List<YardSlot> EmptySlots => YardSlots
+        .Where(s => string.IsNullOrWhiteSpace(s.Trailer))
+        .ToList();
+
+    private int? SelectedSlotId;
+    private YardSlot? SelectedGridSlot;
+
+    private string CheckInTrailerNumber = "";
+    private string CheckInLoadId = "";
+    private string CheckInSeal = "";
+    private string CheckInNotes = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -48,7 +74,66 @@
             await Db.SaveChangesAsync();
         }
 
-        YardSlots = await Db.YardSlots.ToListAsync();
+        await LoadSlots();
+    }
+
+    private async Task LoadSlots()
+    {
+        YardSlots = await Db.YardSlots
+            .OrderBy(s => s.Code)
+            .ToListAsync();
+    }
+
+    private void SelectGridSlot(YardSlot slot)
+    {
+        SelectedGridSlot = slot;
+    }
+
+    private async Task CheckInTrailer()
+    {
+        if (SelectedSlotId is null)
+            return;
+
+        var slot = await Db.YardSlots.FindAsync(SelectedSlotId.Value);
+
+        if (slot is null)
+            return;
+
+        slot.Trailer = CheckInTrailerNumber;
+        slot.LoadId = CheckInLoadId;
+        slot.Seal = CheckInSeal;
+        slot.Notes = CheckInNotes;
+
+        await Db.SaveChangesAsync();
+
+        CheckInTrailerNumber = "";
+        CheckInLoadId = "";
+        CheckInSeal = "";
+        CheckInNotes = "";
+        SelectedSlotId = null;
+
+        await LoadSlots();
+    }
+
+    private async Task CheckOutTrailer()
+    {
+        if (SelectedGridSlot is null)
+            return;
+
+        var slot = await Db.YardSlots.FindAsync(SelectedGridSlot.Id);
+
+        if (slot is null)
+            return;
+
+        slot.Trailer = "";
+        slot.LoadId = "";
+        slot.Seal = "";
+        slot.Notes = "";
+
+        await Db.SaveChangesAsync();
+
+        SelectedGridSlot = null;
+        await LoadSlots();
     }
 
     private List<YardSlot> GenerateSlots(string prefix, int start, int end)
@@ -59,19 +144,10 @@
         {
             slots.Add(new YardSlot
             {
-                Code = $"{prefix}{i}",
-                Trailer = "",
-                LoadId = "",
-                Notes = ""
+                Code = $"{prefix}{i}"
             });
         }
 
         return slots;
-    }
-
-    private async Task SaveSlot(YardSlot slot)
-    {
-        Db.YardSlots.Update(slot);
-        await Db.SaveChangesAsync();
     }
 }
