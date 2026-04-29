@@ -55,7 +55,7 @@
  }
 
 .main {
-    max-height : 575px;
+    max-height : 525px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -64,15 +64,20 @@
 .slip {
     display: grid;
     grid-template-columns: 180px 1fr 180px 180px 180px;
-    height: 100px;
+    height: 200px;
     width: 100%;
 }
 
 .slip > div {
     border: 1px solid #000000;
     box-sizing: border-box;
-    padding: 8px;
+    padding: 24px;
 
+}
+
+.actions button {
+    width: 100%;
+    padding: 8px;
 }
 
 .main::-webkit-scrollbar {

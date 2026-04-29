@@ -1,0 +1,77 @@
+﻿@page "/yard"
+@using Microsoft.EntityFrameworkCore
+@using YardManagementSim.Data
+@using YardManagementSim.Models
+@inject YardDbContext Db
+
+<div class="main">
+    @foreach (var slot in YardSlots)
+    {
+        <div class="slip">
+            <div class="slot-code">@slot.Code</div>
+
+            <div class="trailer">
+                <input @bind="slot.Trailer" />
+            </div>
+
+            <div class="loadid">
+                <input @bind="slot.LoadId" />
+            </div>
+
+            <div class="Seal">
+                <input @bind="slot.Seal" />
+            </div>
+
+            <div class="notes">
+                <input @bind="slot.Notes" />
+            </div>
+
+            <div class="actions">
+                <button @onclick="() => SaveSlot(slot)">Save</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<YardSlot> YardSlots = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!await Db.YardSlots.AnyAsync())
+        {
+            Db.YardSlots.AddRange(GenerateSlots("DD", 102, 178));
+            Db.YardSlots.AddRange(GenerateSlots("PS", 501, 630));
+            Db.YardSlots.AddRange(GenerateSlots("PS", 701, 741));
+            Db.YardSlots.AddRange(GenerateSlots("PS", 201, 234));
+
+            await Db.SaveChangesAsync();
+        }
+
+        YardSlots = await Db.YardSlots.ToListAsync();
+    }
+
+    private List<YardSlot> GenerateSlots(string prefix, int start, int end)
+    {
+        var slots = new List<YardSlot>();
+
+        for (int i = start; i <= end; i++)
+        {
+            slots.Add(new YardSlot
+            {
+                Code = $"{prefix}{i}",
+                Trailer = "",
+                LoadId = "",
+                Notes = ""
+            });
+        }
+
+        return slots;
+    }
+
+    private async Task SaveSlot(YardSlot slot)
+    {
+        Db.YardSlots.Update(slot);
+        await Db.SaveChangesAsync();
+    }
+}

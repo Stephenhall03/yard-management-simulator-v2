@@ -1,10 +1,15 @@
 using YardManagementSim.Components;
+using Microsoft.EntityFrameworkCore;
+using YardManagementSim.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddDbContext<YardDbContext>(options =>
+        options.UseSqlite(builder.Configuration.GetConnectionString("YardDatabase")));
 
 var app = builder.Build();
 
