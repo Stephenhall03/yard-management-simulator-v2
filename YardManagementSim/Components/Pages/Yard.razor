@@ -1,5 +1,6 @@
 ﻿@page "/"
 @page "/yard"
+@rendermode InteractiveServer
 
 @using Microsoft.EntityFrameworkCore
 @using YardManagementSim.Data
@@ -7,45 +8,101 @@
 
 @inject YardDbContext Db
 
-<div class="yard-header">
-    <select @bind="SelectedSlotId">
-        <option value="">Select empty slip</option>
-        @foreach (var slot in EmptySlots)
-        {
-            <option value="@slot.Id">@slot.Code</option>
-        }
-    </select>
 
-    <input placeholder="Trailer Number" @bind="CheckInTrailerNumber" />
-    <input placeholder="Load ID" @bind="CheckInLoadId" />
-    <input placeholder="Seal" @bind="CheckInSeal" />
-    <input placeholder="Notes" @bind="CheckInNotes" />
+<div class="yard-page">
 
-    <button @onclick="CheckInTrailer">Check In</button>
-    <button @onclick="CheckOutTrailer" disabled="@(SelectedGridSlot == null)">Check Out</button>
-</div>
+    <div class="yard-top-banner">YMS — Yard Management System</div>
 
-<div class="main-div">
-    <div>Slip</div>
-    <div>Trailer</div>
-    <div>Load ID</div>
-    <div>Seal</div>
-    <div>Notes</div>
-</div>
+    <div class="yard-toolbar">
+        <select value="@SelectedSlotId" @onchange="OnSlotSelected">
+            <option value="">— Select slip —</option>
+            @foreach (var slot in EmptySlots)
+            {
+                <option value="@slot.Id">@slot.Code</option>
+            }
+        </select>
+        <input placeholder="Trailer #" @bind="CheckInTrailerNumber" @bind:event="oninput" />
+        <input placeholder="Load ID" @bind="CheckInLoadId" @bind:event="oninput" />
+        <input placeholder="Seal" @bind="CheckInSeal" @bind:event="oninput" />
+        <input placeholder="Notes" @bind="CheckInNotes" @bind:event="oninput" />
+        <button class="btn-checkin" @onclick="CheckInTrailer">&#10004; Check In</button>
+        <button class="btn-checkout" @onclick="CheckOutTrailer"
+                disabled="@(SelectedGridSlot == null)">
+            &#10008; Check Out
+        </button>
+    </div>
 
-<div class="main">
-    @foreach (var slot in YardSlots)
+    @if (!string.IsNullOrEmpty(StatusMessage))
     {
-        <div class="slip @(SelectedGridSlot?.Id == slot.Id ? "selected" : "")"
-             @onclick="() => SelectGridSlot(slot)">
-
-            <div class="slot-code">@slot.Code</div>
-            <div class="trailer">@slot.Trailer</div>
-            <div class="loadid">@slot.LoadId</div>
-            <div class="seal">@slot.Seal</div>
-            <div class="notes">@slot.Notes</div>
+        <div style="padding: 6px 12px; font-size: 12px; font-weight: 600;
+                        background: @(StatusIsError ? "#fdd" : "#dfd");
+                        color: @(StatusIsError ? "#900" : "#060");
+                        border-bottom: 1px solid @(StatusIsError ? "#f99" : "#9d9");">
+            @StatusMessage
         </div>
     }
+
+    <div class="yard-grid-wrapper">
+
+        <!-- DD Section -->
+        <div class="yard-grid">
+            <div class="section-banner banner-blue">DD Dock Slips</div>
+
+            <div class="col-header">Slip</div>
+            <div class="col-header">Trailer #</div>
+            <div class="col-header">Load ID</div>
+            <div class="col-header">Seal</div>
+            <div class="col-header">Notes</div>
+            <div class="col-header">Status</div>
+
+            @foreach (var slot in YardSlots.Where(s => s.Code.StartsWith("DD")))
+            {
+                var sel = SelectedGridSlot?.Id == slot.Id ? "selected" : "";
+                var occupied = !string.IsNullOrWhiteSpace(slot.Trailer);
+
+                <div class="slip-code @sel">@slot.Code</div>
+                <div class="slip-cell cell-trailer @sel" @onclick="() => SelectGridSlot(slot)">@slot.Trailer</div>
+                <div class="slip-cell cell-loadid  @sel" @onclick="() => SelectGridSlot(slot)">@slot.LoadId</div>
+                <div class="slip-cell cell-seal    @sel" @onclick="() => SelectGridSlot(slot)">@slot.Seal</div>
+                <div class="slip-cell cell-notes   @sel" @onclick="() => SelectGridSlot(slot)">@slot.Notes</div>
+                <div class="slip-cell cell-status  @sel" @onclick="() => SelectGridSlot(slot)">
+                    <span class="badge @(occupied ? "badge-occupied" : "badge-empty")">
+                        @(occupied ? "In" : "Empty")
+                    </span>
+                </div>
+            }
+        </div>
+
+        <!-- PS Section -->
+        <div class="yard-grid" style="margin-top: 16px;">
+            <div class="section-banner banner-red">PS Dock Slips</div>
+
+            <div class="col-header">Slip</div>
+            <div class="col-header">Trailer #</div>
+            <div class="col-header">Load ID</div>
+            <div class="col-header">Seal</div>
+            <div class="col-header">Notes</div>
+            <div class="col-header">Status</div>
+
+            @foreach (var slot in YardSlots.Where(s => s.Code.StartsWith("PS")))
+            {
+                var sel = SelectedGridSlot?.Id == slot.Id ? "selected" : "";
+                var occupied = !string.IsNullOrWhiteSpace(slot.Trailer);
+
+                <div class="slip-code @sel">@slot.Code</div>
+                <div class="slip-cell cell-trailer @sel" @onclick="() => SelectGridSlot(slot)">@slot.Trailer</div>
+                <div class="slip-cell cell-loadid  @sel" @onclick="() => SelectGridSlot(slot)">@slot.LoadId</div>
+                <div class="slip-cell cell-seal    @sel" @onclick="() => SelectGridSlot(slot)">@slot.Seal</div>
+                <div class="slip-cell cell-notes   @sel" @onclick="() => SelectGridSlot(slot)">@slot.Notes</div>
+                <div class="slip-cell cell-status  @sel" @onclick="() => SelectGridSlot(slot)">
+                    <span class="badge @(occupied ? "badge-occupied" : "badge-empty")">
+                        @(occupied ? "In" : "Empty")
+                    </span>
+                </div>
+            }
+        </div>
+
+    </div>
 </div>
 
 @code {
@@ -62,6 +119,19 @@
     private string CheckInSeal = "";
     private string CheckInNotes = "";
 
+    private string StatusMessage = "";
+    private bool StatusIsError = false;
+
+    // Explicit change handler — @bind on <select> can silently fail to parse int
+    private void OnSlotSelected(ChangeEventArgs e)
+    {
+        var raw = e.Value?.ToString();
+        if (int.TryParse(raw, out var id))
+            SelectedSlotId = id;
+        else
+            SelectedSlotId = null;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         if (!await Db.YardSlots.AnyAsync())
@@ -70,7 +140,6 @@
             Db.YardSlots.AddRange(GenerateSlots("PS", 501, 630));
             Db.YardSlots.AddRange(GenerateSlots("PS", 701, 741));
             Db.YardSlots.AddRange(GenerateSlots("PS", 201, 234));
-
             await Db.SaveChangesAsync();
         }
 
@@ -91,20 +160,40 @@
 
     private async Task CheckInTrailer()
     {
+        StatusMessage = "";
+
         if (SelectedSlotId is null)
+        {
+            StatusMessage = "Please select a slip from the dropdown.";
+            StatusIsError = true;
             return;
+        }
+
+        if (string.IsNullOrWhiteSpace(CheckInTrailerNumber))
+        {
+            StatusMessage = "Please enter a Trailer #.";
+            StatusIsError = true;
+            return;
+        }
 
         var slot = await Db.YardSlots.FindAsync(SelectedSlotId.Value);
 
         if (slot is null)
+        {
+            StatusMessage = $"Slip ID {SelectedSlotId} not found in database.";
+            StatusIsError = true;
             return;
+        }
 
-        slot.Trailer = CheckInTrailerNumber;
-        slot.LoadId = CheckInLoadId;
-        slot.Seal = CheckInSeal;
-        slot.Notes = CheckInNotes;
+        slot.Trailer = CheckInTrailerNumber.Trim();
+        slot.LoadId = CheckInLoadId.Trim();
+        slot.Seal = CheckInSeal.Trim();
+        slot.Notes = CheckInNotes.Trim();
 
         await Db.SaveChangesAsync();
+
+        StatusMessage = $"Trailer {slot.Trailer} checked in to {slot.Code}.";
+        StatusIsError = false;
 
         CheckInTrailerNumber = "";
         CheckInLoadId = "";
@@ -117,14 +206,12 @@
 
     private async Task CheckOutTrailer()
     {
-        if (SelectedGridSlot is null)
-            return;
+        if (SelectedGridSlot is null) return;
 
         var slot = await Db.YardSlots.FindAsync(SelectedGridSlot.Id);
+        if (slot is null) return;
 
-        if (slot is null)
-            return;
-
+        var code = slot.Code;
         slot.Trailer = "";
         slot.LoadId = "";
         slot.Seal = "";
@@ -132,22 +219,18 @@
 
         await Db.SaveChangesAsync();
 
+        StatusMessage = $"Slip {code} cleared.";
+        StatusIsError = false;
         SelectedGridSlot = null;
+
         await LoadSlots();
     }
 
     private List<YardSlot> GenerateSlots(string prefix, int start, int end)
     {
         var slots = new List<YardSlot>();
-
         for (int i = start; i <= end; i++)
-        {
-            slots.Add(new YardSlot
-            {
-                Code = $"{prefix}{i}"
-            });
-        }
-
+            slots.Add(new YardSlot { Code = $"{prefix}{i}" });
         return slots;
     }
 }

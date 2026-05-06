@@ -1,0 +1,178 @@
+/* ── Overall page ── */
+.yard-page {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 13px;
+    background: #f4f4f4;
+    min-height: 100vh;
+    padding: 0;
+}
+
+/* ── Green top banner ── */
+.yard-top-banner {
+    background: #1a7a1a;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px 16px;
+}
+
+/* ── Toolbar ── */
+.yard-toolbar {
+    background: #2b2b2b;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+}
+
+.yard-toolbar select,
+.yard-toolbar input {
+    padding: 4px 8px;
+    border: 1px solid #555;
+    border-radius: 3px;
+    background: #3a3a3a;
+    color: #eee;
+    font-size: 12px;
+    height: 28px;
+}
+
+.yard-toolbar button {
+    padding: 4px 14px;
+    border: none;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: pointer;
+    height: 28px;
+    font-weight: 600;
+}
+
+.btn-checkin           { background: #1a7a1a; color: white; }
+.btn-checkout          { background: #b22222; color: white; }
+.btn-checkout:disabled { background: #555;    color: #999; cursor: default; }
+
+/* ── Grid wrapper ── */
+.yard-grid-wrapper {
+    padding: 12px;
+    overflow-x: auto;
+}
+
+/*
+  6 columns:
+    Slip (fixed) | Trailer (fixed) | Load ID (2fr — wide middle) | Seal (fixed) | Notes (2fr) | Status (fixed)
+*/
+.yard-grid {
+    display: grid;
+    grid-template-columns: 90px 130px 2fr 110px 2fr 80px;
+    border-left: 1px solid #bbb;
+    border-top: 1px solid #bbb;
+    min-width: 820px;
+}
+
+.yard-grid > div {
+    border-right: 1px solid #bbb;
+    border-bottom: 1px solid #bbb;
+    padding: 5px 8px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+}
+
+/* ── Full-width section banner ── */
+.section-banner {
+    grid-column: 1 / -1;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 6px 10px;
+    min-height: unset !important;
+}
+
+.banner-blue { background: #0033cc; }
+.banner-red  { background: #cc0000; }
+
+/* ── Column headers ── */
+.col-header {
+    background: #e0e0e0;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #444;
+    justify-content: center;
+    border-bottom: 2px solid #aaa !important;
+}
+
+/* ── Slip code cell ── */
+.slip-code {
+    background: #f0f0f0;
+    font-weight: 700;
+    color: #111;
+    font-size: 12px;
+    justify-content: center;
+    border-right: 2px solid #aaa !important;
+}
+
+.slip-code.selected { background: #bbd4ff !important; }
+
+/* ── Base data cell ── */
+.slip-cell {
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.12s;
+    justify-content: center;
+    text-align: center;
+    background: #fff;
+    color: #555;
+}
+
+/* ── Per-column accent colours ── */
+.cell-trailer {
+    font-weight: 700;
+    font-size: 13px;
+    color: #111;
+    background: #f5f5f5;
+}
+
+/* Load ID — green tint (widest column) */
+.cell-loadid {
+    background: #eaf4ea;
+    color: #1a5c1a;
+    font-weight: 600;
+}
+
+/* Seal — amber tint */
+.cell-seal {
+    background: #fef6e4;
+    color: #7a4a00;
+    font-weight: 600;
+}
+
+/* Notes — soft purple tint, italic */
+.cell-notes {
+    background: #f4eeff;
+    color: #4a1a80;
+    font-style: italic;
+    text-align: left;
+    justify-content: flex-start;
+}
+
+.cell-status { justify-content: center; }
+
+/* ── Status / occupancy badge ── */
+.badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.badge-occupied { background: #d4edda; color: #155724; border: 1px solid #b8dac4; }
+.badge-empty    { background: #e9ecef; color: #868e96; border: 1px solid #ccc; }
+
+/* ── Selected row — overrides column colour ── */
+.slip-cell.selected { background: #cfe2ff !important; color: #003085 !important; font-style: normal !important; }
