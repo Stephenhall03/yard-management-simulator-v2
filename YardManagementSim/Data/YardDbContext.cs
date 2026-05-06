@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using YardManagementSim.Models;
 
-
 namespace YardManagementSim.Data
 {
     public class YardDbContext : DbContext
@@ -11,5 +10,6 @@ namespace YardManagementSim.Data
         }
 
         public DbSet<YardSlot> YardSlots { get; set; }
+        public DbSet<YardMove> YardMoves { get; set; }
     }
 }

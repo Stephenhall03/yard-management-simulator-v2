@@ -28,34 +28,46 @@
     gap: 8px;
     padding: 8px 12px;
     position: sticky;
-    top: 0;
+    top: 41px; /* height of the banner above it */
     z-index: 10;
 }
 
-.yard-toolbar select,
-.yard-toolbar input {
-    padding: 4px 8px;
-    border: 1px solid #555;
-    border-radius: 3px;
-    background: #3a3a3a;
-    color: #eee;
-    font-size: 12px;
-    height: 28px;
+    .yard-toolbar select,
+    .yard-toolbar input {
+        padding: 4px 8px;
+        border: 1px solid #555;
+        border-radius: 3px;
+        background: #3a3a3a;
+        color: #eee;
+        font-size: 12px;
+        height: 28px;
+    }
+
+    .yard-toolbar button {
+        padding: 4px 14px;
+        border: none;
+        border-radius: 3px;
+        font-size: 12px;
+        cursor: pointer;
+        height: 28px;
+        font-weight: 600;
+    }
+
+.btn-checkin {
+    background: #1a7a1a;
+    color: white;
 }
 
-.yard-toolbar button {
-    padding: 4px 14px;
-    border: none;
-    border-radius: 3px;
-    font-size: 12px;
-    cursor: pointer;
-    height: 28px;
-    font-weight: 600;
+.btn-checkout {
+    background: #b22222;
+    color: white;
 }
 
-.btn-checkin           { background: #1a7a1a; color: white; }
-.btn-checkout          { background: #b22222; color: white; }
-.btn-checkout:disabled { background: #555;    color: #999; cursor: default; }
+    .btn-checkout:disabled {
+        background: #555;
+        color: #999;
+        cursor: default;
+    }
 
 /* ── Grid wrapper ── */
 .yard-grid-wrapper {
@@ -75,14 +87,14 @@
     min-width: 820px;
 }
 
-.yard-grid > div {
-    border-right: 1px solid #bbb;
-    border-bottom: 1px solid #bbb;
-    padding: 5px 8px;
-    min-height: 40px;
-    display: flex;
-    align-items: center;
-}
+    .yard-grid > div {
+        border-right: 1px solid #bbb;
+        border-bottom: 1px solid #bbb;
+        padding: 5px 8px;
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+    }
 
 /* ── Full-width section banner ── */
 .section-banner {
@@ -94,8 +106,13 @@
     min-height: unset !important;
 }
 
-.banner-blue { background: #0033cc; }
-.banner-red  { background: #cc0000; }
+.banner-blue {
+    background: #0033cc;
+}
+
+.banner-red {
+    background: #cc0000;
+}
 
 /* ── Column headers ── */
 .col-header {
@@ -119,7 +136,9 @@
     border-right: 2px solid #aaa !important;
 }
 
-.slip-code.selected { background: #bbd4ff !important; }
+    .slip-code.selected {
+        background: #bbd4ff !important;
+    }
 
 /* ── Base data cell ── */
 .slip-cell {
@@ -163,7 +182,9 @@
     justify-content: flex-start;
 }
 
-.cell-status { justify-content: center; }
+.cell-status {
+    justify-content: center;
+}
 
 /* ── Status / occupancy badge ── */
 .badge {
@@ -177,8 +198,296 @@
     white-space: nowrap;
 }
 
-.badge-occupied { background: #d4edda; color: #155724; border: 1px solid #b8dac4; }
-.badge-empty    { background: #e9ecef; color: #868e96; border: 1px solid #ccc; }
+.badge-occupied {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #b8dac4;
+}
+
+.badge-empty {
+    background: #e9ecef;
+    color: #868e96;
+    border: 1px solid #ccc;
+}
 
 /* ── Selected row — overrides column colour ── */
-.slip-cell.selected { background: #cfe2ff !important; color: #003085 !important; font-style: normal !important; }
+.slip-cell.selected {
+    background: #cfe2ff !important;
+    color: #003085 !important;
+    font-style: normal !important;
+}
+
+/* ══════════════════════════════════════
+   Status bar
+   ══════════════════════════════════════ */
+.status-bar {
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-ok {
+    background: #dfd;
+    color: #060;
+    border-bottom: 1px solid #9d9;
+}
+
+.status-error {
+    background: #fdd;
+    color: #900;
+    border-bottom: 1px solid #f99;
+}
+
+/* ══════════════════════════════════════
+   Driver Move List
+   ══════════════════════════════════════ */
+.move-list-section {
+    margin-top: 20px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.move-list-header {
+    background: #2b2b2b;
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 10px 14px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+}
+
+    .move-list-header:hover {
+        background: #3a3a3a;
+    }
+
+.move-list-toggle {
+    font-size: 11px;
+    color: #aaa;
+    font-weight: 400;
+}
+
+.move-list-empty {
+    padding: 16px;
+    color: #888;
+    font-size: 13px;
+    text-align: center;
+    background: #fafafa;
+}
+
+/* 6-column move list grid: Trailer | From | → | To | Status | Action */
+.move-list-grid {
+    display: grid;
+    grid-template-columns: 160px 120px 30px 120px 90px 90px;
+    border-top: 1px solid #ddd;
+}
+
+.move-col-header {
+    background: #e8e8e8;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #555;
+    padding: 6px 10px;
+    border-right: 1px solid #ddd;
+    border-bottom: 2px solid #bbb;
+}
+
+.move-cell {
+    padding: 8px 10px;
+    font-size: 12px;
+    border-right: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+}
+
+.move-row-pending {
+    background: #fff;
+}
+
+.move-row-done {
+    background: #f5f5f5;
+    color: #999;
+}
+
+.move-trailer {
+    font-weight: 700;
+    color: #111;
+}
+
+.move-from {
+    color: #c00;
+    font-weight: 600;
+}
+
+.move-arrow {
+    justify-content: center;
+    color: #888;
+    font-size: 16px;
+}
+
+.move-to {
+    color: #060;
+    font-weight: 600;
+}
+
+.badge-pending {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffc107;
+}
+
+.btn-complete {
+    background: #1a7a1a;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 3px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+    .btn-complete:hover {
+        background: #145c14;
+    }
+
+/* ══════════════════════════════════════
+   Move Popup
+   ══════════════════════════════════════ */
+.popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.popup-box {
+    background: #fff;
+    border-radius: 6px;
+    padding: 24px 28px;
+    min-width: 360px;
+    max-width: 480px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.popup-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}
+
+.popup-from {
+    background: #f5f5f5;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #333;
+}
+
+.popup-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.popup-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #666;
+}
+
+.popup-select {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 13px;
+    width: 100%;
+}
+
+.popup-error {
+    background: #fdd;
+    color: #900;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.popup-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 4px;
+}
+
+.btn-cancel {
+    background: #e0e0e0;
+    color: #333;
+    border: none;
+    border-radius: 4px;
+    padding: 7px 18px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+    .btn-cancel:hover {
+        background: #ccc;
+    }
+
+.btn-confirm {
+    background: #1a7a1a;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 7px 18px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+    .btn-confirm:hover {
+        background: #145c14;
+    }
+
+/* ── Nav switch button in YMS banner ── */
+.yard-top-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-switch-btn {
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 6px;
+    padding: 5px 12px;
+    text-decoration: none;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+
+    .nav-switch-btn:hover {
+        background: rgba(255,255,255,0.28);
+        color: #fff;
+    }

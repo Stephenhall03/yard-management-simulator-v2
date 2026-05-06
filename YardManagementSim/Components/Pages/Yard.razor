@@ -8,10 +8,12 @@
 
 @inject YardDbContext Db
 
-
 <div class="yard-page">
 
-    <div class="yard-top-banner">YMS — Yard Management System</div>
+    <div class="yard-top-banner">
+        <span>YMS — Yard Management System</span>
+        <a href="/tc" class="nav-switch-btn">&#128666; TC View</a>
+    </div>
 
     <div class="yard-toolbar">
         <select value="@SelectedSlotId" @onchange="OnSlotSelected">
@@ -34,10 +36,7 @@
 
     @if (!string.IsNullOrEmpty(StatusMessage))
     {
-        <div style="padding: 6px 12px; font-size: 12px; font-weight: 600;
-                        background: @(StatusIsError ? "#fdd" : "#dfd");
-                        color: @(StatusIsError ? "#900" : "#060");
-                        border-bottom: 1px solid @(StatusIsError ? "#f99" : "#9d9");">
+        <div class="status-bar @(StatusIsError ? "status-error" : "status-ok")">
             @StatusMessage
         </div>
     }
@@ -46,8 +45,7 @@
 
         <!-- DD Section -->
         <div class="yard-grid">
-            <div class="section-banner banner-blue">DD Dock Slips</div>
-
+            <div class="section-banner banner-blue">DD Dock Slips — click an occupied slip to queue a move</div>
             <div class="col-header">Slip</div>
             <div class="col-header">Trailer #</div>
             <div class="col-header">Load ID</div>
@@ -61,11 +59,11 @@
                 var occupied = !string.IsNullOrWhiteSpace(slot.Trailer);
 
                 <div class="slip-code @sel">@slot.Code</div>
-                <div class="slip-cell cell-trailer @sel" @onclick="() => SelectGridSlot(slot)">@slot.Trailer</div>
-                <div class="slip-cell cell-loadid  @sel" @onclick="() => SelectGridSlot(slot)">@slot.LoadId</div>
-                <div class="slip-cell cell-seal    @sel" @onclick="() => SelectGridSlot(slot)">@slot.Seal</div>
-                <div class="slip-cell cell-notes   @sel" @onclick="() => SelectGridSlot(slot)">@slot.Notes</div>
-                <div class="slip-cell cell-status  @sel" @onclick="() => SelectGridSlot(slot)">
+                <div class="slip-cell cell-trailer @sel" @onclick="() => OnSlotMoveClicked(slot)">@slot.Trailer</div>
+                <div class="slip-cell cell-loadid  @sel" @onclick="() => OnSlotMoveClicked(slot)">@slot.LoadId</div>
+                <div class="slip-cell cell-seal    @sel" @onclick="() => OnSlotMoveClicked(slot)">@slot.Seal</div>
+                <div class="slip-cell cell-notes   @sel" @onclick="() => OnSlotMoveClicked(slot)">@slot.Notes</div>
+                <div class="slip-cell cell-status  @sel" @onclick="() => OnSlotMoveClicked(slot)">
                     <span class="badge @(occupied ? "badge-occupied" : "badge-empty")">
                         @(occupied ? "In" : "Empty")
                     </span>
@@ -75,8 +73,7 @@
 
         <!-- PS Section -->
         <div class="yard-grid" style="margin-top: 16px;">
-            <div class="section-banner banner-red">PS Dock Slips</div>
-
+            <div class="section-banner banner-red">PS Dock Slips — click an occupied slip to move it</div>
             <div class="col-header">Slip</div>
             <div class="col-header">Trailer #</div>
             <div class="col-header">Load ID</div>
@@ -90,11 +87,11 @@
                 var occupied = !string.IsNullOrWhiteSpace(slot.Trailer);
 
                 <div class="slip-code @sel">@slot.Code</div>
-                <div class="slip-cell cell-trailer @sel" @onclick="() => SelectGridSlot(slot)">@slot.Trailer</div>
-                <div class="slip-cell cell-loadid  @sel" @onclick="() => SelectGridSlot(slot)">@slot.LoadId</div>
-                <div class="slip-cell cell-seal    @sel" @onclick="() => SelectGridSlot(slot)">@slot.Seal</div>
-                <div class="slip-cell cell-notes   @sel" @onclick="() => SelectGridSlot(slot)">@slot.Notes</div>
-                <div class="slip-cell cell-status  @sel" @onclick="() => SelectGridSlot(slot)">
+                <div class="slip-cell cell-trailer @sel" @onclick="() => OnSlotMoveClicked(slot)">@slot.Trailer</div>
+                <div class="slip-cell cell-loadid  @sel" @onclick="() => OnSlotMoveClicked(slot)">@slot.LoadId</div>
+                <div class="slip-cell cell-seal    @sel" @onclick="() => OnSlotMoveClicked(slot)">@slot.Seal</div>
+                <div class="slip-cell cell-notes   @sel" @onclick="() => OnSlotMoveClicked(slot)">@slot.Notes</div>
+                <div class="slip-cell cell-status  @sel" @onclick="() => OnSlotMoveClicked(slot)">
                     <span class="badge @(occupied ? "badge-occupied" : "badge-empty")">
                         @(occupied ? "In" : "Empty")
                     </span>
@@ -102,34 +99,137 @@
             }
         </div>
 
+        <!-- Driver Move List -->
+        <div class="move-list-section">
+            <div class="move-list-header" @onclick="ToggleMoveList">
+                &#128666; Driver Move List (@MoveList.Count)
+                <span class="move-list-toggle">@(ShowMoveList ? "▲ Hide" : "▼ Show")</span>
+            </div>
+
+            @if (ShowMoveList)
+            {
+                @if (!MoveList.Any())
+                {
+                    <div class="move-list-empty">No moves queued yet.</div>
+                }
+                else
+                {
+                    <div class="move-list-grid">
+                        <div class="move-col-header">Trailer #</div>
+                        <div class="move-col-header">From</div>
+                        <div class="move-col-header"></div>
+                        <div class="move-col-header">To</div>
+                        <div class="move-col-header">Status</div>
+                        <div class="move-col-header"></div>
+
+                        @foreach (var move in MoveList)
+                        {
+                            var rowClass = move.Completed ? "move-row-done" : "move-row-pending";
+                            <div class="move-cell move-trailer @rowClass">@move.Trailer</div>
+                            <div class="move-cell move-from    @rowClass">@move.FromSlip</div>
+                            <div class="move-cell move-arrow   @rowClass">&#8594;</div>
+                            <div class="move-cell move-to      @rowClass">@move.ToSlip</div>
+                            <div class="move-cell @rowClass">
+                                <span class="badge @(move.Completed ? "badge-occupied" : "badge-pending")">
+                                    @(move.Completed ? "Done" : "Pending")
+                                </span>
+                            </div>
+                            <div class="move-cell @rowClass">
+                                @if (!move.Completed)
+                                {
+                                    <button class="btn-complete" @onclick="() => CompleteMove(move)">
+                                        &#10004; Done
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        </div>
+
     </div>
 </div>
 
+<!-- Move Popup -->
+@if (ShowMovePopup && MoveSourceSlot != null)
+{
+    <div class="popup-overlay" @onclick="CloseMovePopup">
+        <div class="popup-box" @onclick:stopPropagation="true">
+            <div class="popup-title">&#128666; Move Trailer</div>
+
+            <div class="popup-from">
+                <span class="popup-label">From:</span>
+                <strong>@MoveSourceSlot.Code</strong>
+                &nbsp;&nbsp;
+                <span class="popup-label">Trailer:</span>
+                <strong>@MoveSourceSlot.Trailer</strong>
+            </div>
+
+            <div class="popup-field">
+                <label class="popup-label">Move to slip:</label>
+                <select class="popup-select" value="@MoveTargetSlotId" @onchange="OnMoveTargetSelected">
+                    <option value="">— Select destination —</option>
+                    @foreach (var slot in EmptySlots)
+                    {
+                        <option value="@slot.Id">@slot.Code</option>
+                    }
+                </select>
+            </div>
+
+            @if (!string.IsNullOrEmpty(PopupError))
+            {
+                <div class="popup-error">@PopupError</div>
+            }
+
+            <div class="popup-actions">
+                <button class="btn-cancel" @onclick="CloseMovePopup">Cancel</button>
+                <button class="btn-confirm" @onclick="ConfirmMove">&#10004; Confirm Move</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<YardSlot> YardSlots = new();
+    private List<YardMove> MoveList = new();
+
     private List<YardSlot> EmptySlots => YardSlots
         .Where(s => string.IsNullOrWhiteSpace(s.Trailer))
         .ToList();
 
+    // Check-in form
     private int? SelectedSlotId;
     private YardSlot? SelectedGridSlot;
-
     private string CheckInTrailerNumber = "";
     private string CheckInLoadId = "";
     private string CheckInSeal = "";
     private string CheckInNotes = "";
 
+    // Status bar
     private string StatusMessage = "";
     private bool StatusIsError = false;
 
-    // Explicit change handler — @bind on <select> can silently fail to parse int
+    // Move popup
+    private bool ShowMovePopup = false;
+    private YardSlot? MoveSourceSlot = null;
+    private int? MoveTargetSlotId = null;
+    private string PopupError = "";
+
+    // Move list panel
+    private bool ShowMoveList = true;
+
     private void OnSlotSelected(ChangeEventArgs e)
     {
         var raw = e.Value?.ToString();
-        if (int.TryParse(raw, out var id))
-            SelectedSlotId = id;
-        else
-            SelectedSlotId = null;
+        SelectedSlotId = int.TryParse(raw, out var id) ? id : null;
+    }
+
+    private void OnMoveTargetSelected(ChangeEventArgs e)
+    {
+        var raw = e.Value?.ToString();
+        MoveTargetSlotId = int.TryParse(raw, out var id) ? id : null;
+        PopupError = "";
     }
 
     protected override async Task OnInitializedAsync()
@@ -144,19 +244,101 @@
         }
 
         await LoadSlots();
+        await LoadMoveList();
     }
 
     private async Task LoadSlots()
     {
-        YardSlots = await Db.YardSlots
-            .OrderBy(s => s.Code)
-            .ToListAsync();
+        YardSlots = await Db.YardSlots.OrderBy(s => s.Code).ToListAsync();
+    }
+
+    private async Task LoadMoveList()
+    {
+        MoveList = await Db.YardMoves.OrderByDescending(m => m.MovedAt).ToListAsync();
     }
 
     private void SelectGridSlot(YardSlot slot)
     {
         SelectedGridSlot = slot;
+        StatusMessage = "";
     }
+
+    // Click on any occupied slip — open move queue popup
+    private void OnSlotMoveClicked(YardSlot slot)
+    {
+        if (!string.IsNullOrWhiteSpace(slot.Trailer))
+        {
+            MoveSourceSlot = slot;
+            MoveTargetSlotId = null;
+            PopupError = "";
+            ShowMovePopup = true;
+        }
+        else
+        {
+            SelectGridSlot(slot);
+        }
+    }
+
+    private void CloseMovePopup()
+    {
+        ShowMovePopup = false;
+        MoveSourceSlot = null;
+        PopupError = "";
+    }
+
+    private async Task ConfirmMove()
+    {
+        if (MoveTargetSlotId is null)
+        {
+            PopupError = "Please select a destination slip.";
+            return;
+        }
+
+        var fromSlot = await Db.YardSlots.FindAsync(MoveSourceSlot!.Id);
+        var toSlot = await Db.YardSlots.FindAsync(MoveTargetSlotId.Value);
+
+        if (fromSlot is null || toSlot is null)
+        {
+            PopupError = "Slip not found — please refresh and try again.";
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(toSlot.Trailer))
+        {
+            PopupError = "That slip is no longer empty. Please choose another.";
+            return;
+        }
+
+        // Queue the move — data stays put until the move is completed
+        Db.YardMoves.Add(new YardMove
+        {
+            FromSlip = fromSlot.Code,
+            ToSlip = toSlot.Code,
+            Trailer = fromSlot.Trailer,
+            MovedAt = DateTime.Now,
+            Completed = false
+        });
+
+        await Db.SaveChangesAsync();
+
+        StatusMessage = $"Move queued: {fromSlot.Trailer} from {fromSlot.Code} → {toSlot.Code}.";
+        StatusIsError = false;
+
+        CloseMovePopup();
+        await LoadSlots();
+        await LoadMoveList();
+    }
+
+    private async Task CompleteMove(YardMove move)
+    {
+        var record = await Db.YardMoves.FindAsync(move.Id);
+        if (record is null) return;
+        record.Completed = true;
+        await Db.SaveChangesAsync();
+        await LoadMoveList();
+    }
+
+    private void ToggleMoveList() => ShowMoveList = !ShowMoveList;
 
     private async Task CheckInTrailer()
     {
@@ -177,7 +359,6 @@
         }
 
         var slot = await Db.YardSlots.FindAsync(SelectedSlotId.Value);
-
         if (slot is null)
         {
             StatusMessage = $"Slip ID {SelectedSlotId} not found in database.";
@@ -194,7 +375,6 @@
 
         StatusMessage = $"Trailer {slot.Trailer} checked in to {slot.Code}.";
         StatusIsError = false;
-
         CheckInTrailerNumber = "";
         CheckInLoadId = "";
         CheckInSeal = "";
@@ -234,3 +414,4 @@
         return slots;
     }
 }
+

@@ -1,0 +1,452 @@
+﻿@page "/tc"
+@rendermode InteractiveServer
+
+@using Microsoft.EntityFrameworkCore
+@using YardManagementSim.Data
+@using YardManagementSim.Models
+
+@inject YardDbContext Db
+
+<div class="tc-shell">
+    <div class="tc-device">
+
+        <div class="tc-header">
+            <span class="tc-title">YMS Terminal</span>
+            <a href="/" class="tc-nav-switch">&#8592; YMS</a>
+        </div>
+
+        <div class="tc-screen">
+
+            <!-- ═══════════════════════════════
+                 STEP 1 — Move Queue
+                 ═══════════════════════════════ -->
+            @if (Step == TcStep.Queue)
+            {
+                <div class="tc-section-title">Pending Moves</div>
+
+                @if (!PendingMoves.Any())
+                {
+                    <div class="tc-empty">No moves in queue.</div>
+                }
+                else
+                {
+                    @foreach (var move in PendingMoves)
+                    {
+                        <div class="tc-move-card">
+                            <div class="tc-move-row">
+                                <span class="tc-slip-label">Trailer</span>
+                                <strong>@move.Trailer</strong>
+                            </div>
+                            <div class="tc-move-row">
+                                <span class="tc-slip-label">From</span>
+                                <span class="tc-slip-from">@move.FromSlip</span>
+                                <span class="tc-arrow">→</span>
+                                <span class="tc-slip-to">@move.ToSlip</span>
+                            </div>
+                            <button class="tc-btn tc-btn-accept" @onclick="() => AcceptMove(move)">
+                                Accept
+                            </button>
+                        </div>
+                    }
+                }
+            }
+
+            <!-- ═══════════════════════════════
+                 STEP 2 — Pick Up (VTI)
+                 ═══════════════════════════════ -->
+            @if (Step == TcStep.PickUp)
+            {
+                <div class="tc-section-title">Pick Up</div>
+                <div class="tc-instruction">Go to this slip and pick up the trailer.</div>
+
+                <div class="tc-slip-display">
+                    <div class="tc-slip-big">@ActiveMove!.FromSlip</div>
+                    <div class="tc-slip-trailer">Trailer: <strong>@ActiveMove.Trailer</strong></div>
+                </div>
+
+                <button class="tc-btn tc-btn-primary" @onclick="CompleteVti">
+                    &#10003; Complete VTI
+                </button>
+            }
+
+            <!-- ═══════════════════════════════
+                 STEP 3 — Drop Off
+                 ═══════════════════════════════ -->
+            @if (Step == TcStep.DropOff)
+            {
+                <div class="tc-section-title">Drop Off</div>
+                <div class="tc-instruction">Drop trailer at this slip.</div>
+
+                <div class="tc-slip-display">
+                    <div class="tc-slip-big">@CurrentTargetSlip</div>
+                    <div class="tc-slip-trailer">Trailer: <strong>@ActiveMove!.Trailer</strong></div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(DropOffMessage))
+                {
+                    <div class="tc-message @(DropOffIsError ? "tc-msg-error" : "tc-msg-ok")">
+                        @DropOffMessage
+                    </div>
+                }
+
+                <div class="tc-btn-row">
+                    <button class="tc-btn tc-btn-primary" @onclick="CompleteMove">
+                        &#10003; Complete Move
+                    </button>
+                    <button class="tc-btn tc-btn-warning" @onclick="TrailerAlreadyThere">
+                        Trailer Already There
+                    </button>
+                </div>
+            }
+
+            <!-- ═══════════════════════════════
+                 STEP 4 — Trailer Already There
+                 ═══════════════════════════════ -->
+            @if (Step == TcStep.TrailerConflict)
+            {
+                <div class="tc-section-title">Trailer Already There</div>
+                <div class="tc-instruction">
+                    What is the trailer number physically at <strong>@CurrentTargetSlip</strong>?
+                </div>
+
+                <div class="tc-search-wrap">
+                    <input class="tc-input"
+                           placeholder="Type to search trailers..."
+                           @bind="ConflictTrailerInput"
+                           @bind:event="oninput" />
+
+                    @if (!string.IsNullOrWhiteSpace(ConflictTrailerInput) && FilteredTrailers.Any())
+                    {
+                        <div class="tc-suggestions">
+                            @foreach (var t in FilteredTrailers)
+                            {
+                                <div class="tc-suggestion-item" @onclick="() => SelectSuggestion(t)">
+                                    <span class="tc-sug-trailer">@t.Trailer</span>
+                                    <span class="tc-sug-slip">@t.Code</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                @if (!string.IsNullOrEmpty(ConflictMessage))
+                {
+                    <div class="tc-message @(ConflictIsError ? "tc-msg-error" : "tc-msg-ok")">
+                        @ConflictMessage
+                    </div>
+                }
+
+                <div class="tc-btn-row">
+                    <button class="tc-btn tc-btn-secondary" @onclick="CancelConflict">
+                        Back
+                    </button>
+                    <button class="tc-btn tc-btn-primary" @onclick="SubmitConflictTrailer"
+                            disabled="@string.IsNullOrWhiteSpace(ConflictTrailerInput)">
+                        Confirm
+                    </button>
+                </div>
+            }
+
+            <!-- ═══════════════════════════════
+                 STEP 5 — Pick New Destination
+                 ═══════════════════════════════ -->
+            @if (Step == TcStep.PickNewSlip)
+            {
+                <div class="tc-section-title">Select New Destination</div>
+                <div class="tc-instruction">
+                    @CurrentTargetSlip is occupied. Choose an available slip for trailer
+                    <strong>@ActiveMove!.Trailer</strong>.
+                </div>
+
+                <select class="tc-select" value="@NewSlipId" @onchange="OnNewSlipSelected">
+                    <option value="">— Select slip —</option>
+                    @foreach (var slot in AvailableSlots)
+                    {
+                        <option value="@slot.Id">@slot.Code</option>
+                    }
+                </select>
+
+                @if (!string.IsNullOrEmpty(NewSlipMessage))
+                {
+                    <div class="tc-message tc-msg-error">@NewSlipMessage</div>
+                }
+
+                <button class="tc-btn tc-btn-primary" @onclick="ConfirmNewSlip"
+                        disabled="@(NewSlipId is null)">
+                    &#10003; Confirm Destination
+                </button>
+            }
+
+            <!-- ═══════════════════════════════
+                 STEP 6 — Done
+                 ═══════════════════════════════ -->
+            @if (Step == TcStep.Done)
+            {
+                <div class="tc-done">
+                    <div class="tc-done-icon">&#10003;</div>
+                    <div class="tc-done-text">Move Complete</div>
+                    <div class="tc-done-sub">
+                        @ActiveMove!.Trailer moved to @CurrentTargetSlip
+                    </div>
+                    <button class="tc-btn tc-btn-primary" @onclick="ReturnToQueue">
+                        Back to Queue
+                    </button>
+                </div>
+            }
+
+        </div><!-- end tc-screen -->
+    </div><!-- end tc-device -->
+</div>
+
+@code {
+    private enum TcStep { Queue, PickUp, DropOff, TrailerConflict, PickNewSlip, Done }
+
+    private TcStep Step = TcStep.Queue;
+    private List<YardMove> PendingMoves = new();
+    private List<YardSlot> AllSlots = new();
+    private List<YardSlot> AvailableSlots = new();
+    private YardMove? ActiveMove = null;
+    private string CurrentTargetSlip = "";
+
+    // Drop-off feedback
+    private string DropOffMessage = "";
+    private bool DropOffIsError = false;
+
+    // Conflict input
+    private string ConflictTrailerInput = "";
+    private string ConflictMessage = "";
+    private bool ConflictIsError = false;
+
+    // Filtered suggestions — occupied slots matching what the user has typed
+    private List<YardSlot> FilteredTrailers => string.IsNullOrWhiteSpace(ConflictTrailerInput)
+        ? new()
+        : AllSlots
+            .Where(s => !string.IsNullOrWhiteSpace(s.Trailer)
+                     && s.Trailer.Contains(ConflictTrailerInput.Trim(), StringComparison.OrdinalIgnoreCase)
+                     && s.Code != CurrentTargetSlip)
+            .OrderBy(s => s.Trailer)
+            .Take(6)
+            .ToList();
+
+    private void SelectSuggestion(YardSlot slot)
+    {
+        ConflictTrailerInput = slot.Trailer;
+        ConflictMessage = "";
+    }
+
+    // New slip picker
+    private int? NewSlipId = null;
+    private string NewSlipMessage = "";
+
+    private string StepLabel => Step switch
+    {
+        TcStep.Queue => "Queue",
+        TcStep.PickUp => "Step 1 of 3 — Pick Up",
+        TcStep.DropOff => "Step 2 of 3 — Drop Off",
+        TcStep.TrailerConflict => "Step 2 of 3 — Conflict",
+        TcStep.PickNewSlip => "Step 2 of 3 — Reroute",
+        TcStep.Done => "Complete",
+        _ => ""
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        PendingMoves = await Db.YardMoves
+            .Where(m => !m.Completed)
+            .OrderBy(m => m.MovedAt)
+            .ToListAsync();
+
+        AllSlots = await Db.YardSlots.ToListAsync();
+
+        AvailableSlots = AllSlots
+            .Where(s => string.IsNullOrWhiteSpace(s.Trailer))
+            .OrderBy(s => s.Code)
+            .ToList();
+    }
+
+    private void AcceptMove(YardMove move)
+    {
+        ActiveMove = move;
+        CurrentTargetSlip = move.ToSlip;
+        Step = TcStep.PickUp;
+        DropOffMessage = "";
+    }
+
+    private void CompleteVti()
+    {
+        Step = TcStep.DropOff;
+        DropOffMessage = "";
+    }
+
+    private async Task CompleteMove()
+    {
+        var toSlot = AllSlots.FirstOrDefault(s => s.Code == CurrentTargetSlip);
+        if (toSlot is null)
+        {
+            DropOffMessage = "Slip not found. Please refresh.";
+            DropOffIsError = true;
+            return;
+        }
+
+        var toSlotDb = await Db.YardSlots.FindAsync(toSlot.Id);
+        var fromSlotDb = await Db.YardSlots.FirstOrDefaultAsync(s => s.Code == ActiveMove!.FromSlip);
+
+        if (toSlotDb is null || fromSlotDb is null)
+        {
+            DropOffMessage = "Database error. Please refresh.";
+            DropOffIsError = true;
+            return;
+        }
+
+        // Capture source data into locals FIRST so clearing fromSlot doesn't wipe them
+        var trailer = fromSlotDb.Trailer;
+        var loadId = fromSlotDb.LoadId;
+        var seal = fromSlotDb.Seal;
+        var notes = fromSlotDb.Notes;
+
+        // Write to destination
+        toSlotDb.Trailer = trailer;
+        toSlotDb.LoadId = loadId;
+        toSlotDb.Seal = seal;
+        toSlotDb.Notes = notes;
+
+        // Clear source
+        fromSlotDb.Trailer = "";
+        fromSlotDb.LoadId = "";
+        fromSlotDb.Seal = "";
+        fromSlotDb.Notes = "";
+
+        // Mark move complete, update destination in case of reroute
+        var moveDb = await Db.YardMoves.FindAsync(ActiveMove!.Id);
+        if (moveDb is not null)
+        {
+            moveDb.Completed = true;
+            moveDb.ToSlip = CurrentTargetSlip;
+        }
+
+        await Db.SaveChangesAsync();
+
+        Step = TcStep.Done;
+        await LoadData();
+    }
+
+    private void TrailerAlreadyThere()
+    {
+        ConflictTrailerInput = "";
+        ConflictMessage = "";
+        ConflictIsError = false;
+        Step = TcStep.TrailerConflict;
+    }
+
+    private void CancelConflict()
+    {
+        Step = TcStep.DropOff;
+        DropOffMessage = "";
+    }
+
+    private async Task SubmitConflictTrailer()
+    {
+        var input = ConflictTrailerInput.Trim();
+        if (string.IsNullOrWhiteSpace(input)) return;
+
+        await LoadData(); // refresh slot state
+
+        // Does this trailer exist somewhere in the system?
+        var existingSlot = AllSlots.FirstOrDefault(s =>
+            s.Trailer.Equals(input, StringComparison.OrdinalIgnoreCase));
+
+        var conflictSlotDb = await Db.YardSlots
+            .FirstOrDefaultAsync(s => s.Code == CurrentTargetSlip);
+
+        if (conflictSlotDb is null)
+        {
+            ConflictMessage = "Slip not found. Please refresh.";
+            ConflictIsError = true;
+            return;
+        }
+
+        if (existingSlot is not null)
+        {
+            // Trailer found elsewhere — virtually move it to this slip
+            var oldSlotDb = await Db.YardSlots.FindAsync(existingSlot.Id);
+            if (oldSlotDb is not null)
+            {
+                // Copy to conflict slip
+                conflictSlotDb.Trailer = oldSlotDb.Trailer;
+                conflictSlotDb.LoadId = oldSlotDb.LoadId;
+                conflictSlotDb.Seal = oldSlotDb.Seal;
+                conflictSlotDb.Notes = oldSlotDb.Notes;
+
+                // Clear old location
+                oldSlotDb.Trailer = "";
+                oldSlotDb.LoadId = "";
+                oldSlotDb.Seal = "";
+                oldSlotDb.Notes = "";
+
+                ConflictMessage = $"Trailer {input} virtually moved to {CurrentTargetSlip} from {existingSlot.Code}.";
+                ConflictIsError = false;
+            }
+        }
+        else
+        {
+            // Unknown trailer — check it in to this slip automatically
+            conflictSlotDb.Trailer = input;
+            conflictSlotDb.LoadId = "";
+            conflictSlotDb.Seal = "";
+            conflictSlotDb.Notes = "Auto checked-in via VTI";
+
+            ConflictMessage = $"Trailer {input} not found in system — checked in to {CurrentTargetSlip} automatically.";
+            ConflictIsError = false;
+        }
+
+        await Db.SaveChangesAsync();
+        await LoadData();
+
+        // Slot is now occupied — driver must pick a new destination
+        NewSlipId = null;
+        NewSlipMessage = "";
+        Step = TcStep.PickNewSlip;
+    }
+
+    private void OnNewSlipSelected(ChangeEventArgs e)
+    {
+        var raw = e.Value?.ToString();
+        NewSlipId = int.TryParse(raw, out var id) ? id : null;
+        NewSlipMessage = "";
+    }
+
+    private async Task ConfirmNewSlip()
+    {
+        if (NewSlipId is null)
+        {
+            NewSlipMessage = "Please select a slip.";
+            return;
+        }
+
+        var slot = await Db.YardSlots.FindAsync(NewSlipId.Value);
+        if (slot is null || !string.IsNullOrWhiteSpace(slot.Trailer))
+        {
+            NewSlipMessage = "That slip is no longer available. Please choose another.";
+            await LoadData();
+            return;
+        }
+
+        CurrentTargetSlip = slot.Code;
+        DropOffMessage = "";
+        DropOffIsError = false;
+        Step = TcStep.DropOff;
+    }
+
+    private async Task ReturnToQueue()
+    {
+        ActiveMove = null;
+        CurrentTargetSlip = "";
+        Step = TcStep.Queue;
+        await LoadData();
+    }
+}
