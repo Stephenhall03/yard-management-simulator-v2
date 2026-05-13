@@ -45,7 +45,7 @@
 
         <!-- DD Section -->
         <div class="yard-grid">
-            <div class="section-banner banner-blue">DD Dock Slips — click an occupied slip to queue a move</div>
+            <div class="section-banner banner-blue">DD Dock Slips</div>
             <div class="col-header">Slip</div>
             <div class="col-header">Trailer #</div>
             <div class="col-header">Load ID</div>
@@ -58,22 +58,30 @@
                 var sel = SelectedGridSlot?.Id == slot.Id ? "selected" : "";
                 var occupied = !string.IsNullOrWhiteSpace(slot.Trailer);
 
-                <div class="slip-code @sel">@slot.Code</div>
-                <div class="slip-cell cell-trailer @sel" @onclick="() => OnSlotMoveClicked(slot)">@slot.Trailer</div>
-                <div class="slip-cell cell-loadid  @sel" @onclick="() => OnSlotMoveClicked(slot)">@slot.LoadId</div>
-                <div class="slip-cell cell-seal    @sel" @onclick="() => OnSlotMoveClicked(slot)">@slot.Seal</div>
-                <div class="slip-cell cell-notes   @sel" @onclick="() => OnSlotMoveClicked(slot)">@slot.Notes</div>
-                <div class="slip-cell cell-status  @sel" @onclick="() => OnSlotMoveClicked(slot)">
-                    <span class="badge @(occupied ? "badge-occupied" : "badge-empty")">
-                        @(occupied ? "In" : "Empty")
-                    </span>
+                <div class="slip-code @sel" @onclick="() => SelectGridSlot(slot)">@slot.Code</div>
+                <div class="slip-cell cell-trailer @sel" @onclick="() => SelectGridSlot(slot)">@slot.Trailer</div>
+                <div class="slip-cell cell-loadid  @sel" @onclick="() => SelectGridSlot(slot)">@slot.LoadId</div>
+                <div class="slip-cell cell-seal    @sel" @onclick="() => SelectGridSlot(slot)">@slot.Seal</div>
+                <div class="slip-cell cell-notes   @sel" @onclick="() => SelectGridSlot(slot)">@slot.Notes</div>
+                <div class="slip-cell cell-status  @sel" @onclick="() => SelectGridSlot(slot)">
+                    @if (occupied)
+                    {
+                        <button class="btn-move" @onclick:stopPropagation="true"
+                                @onclick="() => OnSlotMoveClicked(slot)">
+                            &#8594; Move
+                        </button>
+                    }
+                    else
+                    {
+                        <span class="badge badge-empty">Empty</span>
+                    }
                 </div>
             }
         </div>
 
         <!-- PS Section -->
         <div class="yard-grid" style="margin-top: 16px;">
-            <div class="section-banner banner-red">PS Dock Slips — click an occupied slip to move it</div>
+            <div class="section-banner banner-red">PS Dock Slips</div>
             <div class="col-header">Slip</div>
             <div class="col-header">Trailer #</div>
             <div class="col-header">Load ID</div>
@@ -86,20 +94,28 @@
                 var sel = SelectedGridSlot?.Id == slot.Id ? "selected" : "";
                 var occupied = !string.IsNullOrWhiteSpace(slot.Trailer);
 
-                <div class="slip-code @sel">@slot.Code</div>
-                <div class="slip-cell cell-trailer @sel" @onclick="() => OnSlotMoveClicked(slot)">@slot.Trailer</div>
-                <div class="slip-cell cell-loadid  @sel" @onclick="() => OnSlotMoveClicked(slot)">@slot.LoadId</div>
-                <div class="slip-cell cell-seal    @sel" @onclick="() => OnSlotMoveClicked(slot)">@slot.Seal</div>
-                <div class="slip-cell cell-notes   @sel" @onclick="() => OnSlotMoveClicked(slot)">@slot.Notes</div>
-                <div class="slip-cell cell-status  @sel" @onclick="() => OnSlotMoveClicked(slot)">
-                    <span class="badge @(occupied ? "badge-occupied" : "badge-empty")">
-                        @(occupied ? "In" : "Empty")
-                    </span>
+                <div class="slip-code @sel" @onclick="() => SelectGridSlot(slot)">@slot.Code</div>
+                <div class="slip-cell cell-trailer @sel" @onclick="() => SelectGridSlot(slot)">@slot.Trailer</div>
+                <div class="slip-cell cell-loadid  @sel" @onclick="() => SelectGridSlot(slot)">@slot.LoadId</div>
+                <div class="slip-cell cell-seal    @sel" @onclick="() => SelectGridSlot(slot)">@slot.Seal</div>
+                <div class="slip-cell cell-notes   @sel" @onclick="() => SelectGridSlot(slot)">@slot.Notes</div>
+                <div class="slip-cell cell-status  @sel" @onclick="() => SelectGridSlot(slot)">
+                    @if (occupied)
+                    {
+                        <button class="btn-move" @onclick:stopPropagation="true"
+                                @onclick="() => OnSlotMoveClicked(slot)">
+                            &#8594; Move
+                        </button>
+                    }
+                    else
+                    {
+                        <span class="badge badge-empty">Empty</span>
+                    }
                 </div>
             }
         </div>
 
-        <!-- Driver Move List -->
+        <!-- Driver Move List 
         <div class="move-list-section">
             <div class="move-list-header" @onclick="ToggleMoveList">
                 &#128666; Driver Move List (@MoveList.Count)
@@ -146,7 +162,7 @@
                     </div>
                 }
             }
-        </div>
+        </div> -->
 
     </div>
 </div>
@@ -414,4 +430,3 @@
         return slots;
     }
 }
-

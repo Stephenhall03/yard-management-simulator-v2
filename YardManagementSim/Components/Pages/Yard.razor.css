@@ -491,3 +491,20 @@
         background: rgba(255,255,255,0.28);
         color: #fff;
     }
+
+/* ── Move button inside status cell ── */
+.btn-move {
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+    .btn-move:hover {
+        background: #1d4ed8;
+    }
